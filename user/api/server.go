@@ -2,6 +2,7 @@ package api
 
 import (
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 
 	controller "github.com/yuhari7/backend_supervision/api/controller/User"
 	"github.com/yuhari7/backend_supervision/config"
@@ -11,6 +12,12 @@ import (
 
 func NewServer() *echo.Echo {
 	e := echo.New()
+
+	// Set up CORS middleware
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"http://localhost:3000"}, // Hapus trailing slash
+		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
+	}))
 
 	// Dependency injection
 	userRepo := repository.NewUserRepository(config.DB)

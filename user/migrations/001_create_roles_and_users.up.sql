@@ -24,4 +24,4 @@ ALTER TABLE users
 ADD COLUMN deleted_at TIMESTAMP;
 
 INSERT INTO users (name, email, password, role_id)
-VALUES ('Super Admin', 'admin@example.com', '$2a$10$somehashedpassword', 1);
+VALUES ('Super Admin', 'admin@example.com', '$2a$10$86r/dZye2Ge45jqF4hptkeF07GD0AghyHdcqGNxbjANs29Ro0oge.', 1);

@@ -50,22 +50,26 @@ func (h *UserController) Register(c echo.Context) error {
 	})
 }
 
+// Login handler
 func (h *UserController) Login(c echo.Context) error {
 	var input dto.LoginRequest
 	if err := c.Bind(&input); err != nil {
 		return c.JSON(http.StatusBadRequest, echo.Map{"error": "invalid request"})
 	}
 
+	// Validasi input login
 	validate := validator.New()
 	if err := validate.Struct(&input); err != nil {
 		return c.JSON(http.StatusBadRequest, echo.Map{"error": err.Error()})
 	}
 
+	// Call usecase login
 	user, err := h.Usecase.Login(input)
 	if err != nil {
 		return c.JSON(http.StatusUnauthorized, echo.Map{"error": err.Error()})
 	}
 
+	// Generate tokens (AccessToken and RefreshToken)
 	accessToken, err := jwtutil.GenerateAccessToken(user.ID, user.Email, user.RoleID)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "failed to generate access token"})
