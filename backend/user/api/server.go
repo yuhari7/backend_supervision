@@ -15,7 +15,7 @@ func NewServer() *echo.Echo {
 
 	// Set up CORS middleware
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"http://localhost:3000"}, // Hapus trailing slash
+		AllowOrigins: []string{"http://localhost:3000"},
 		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
 	}))
 
