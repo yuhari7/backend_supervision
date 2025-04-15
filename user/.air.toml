@@ -1,5 +1,0 @@
-# .air.toml
-[build]
-cmd = "go run cmd/main.go"
-include_ext = ["go"]
-exclude_dir = ["vendor", "migrations"]
