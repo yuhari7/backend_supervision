@@ -136,12 +136,12 @@ export default function AllPosts() {
           <h2 className="text-3xl  font-semibold text-gray-800 mb-8">
             Postingan Article
           </h2>
-          <a
+          <Link
             href="/articles/add-article"
             className="!px-8 !bg-indigo-100 !text-indigo-500 !rounded-full"
           >
             Add Article
-          </a>
+          </Link>
         </div>
 
         <div className="flex gap-3 mb-8 space-x-3">
