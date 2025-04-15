@@ -2,7 +2,12 @@
 
 ## Description
 
-Proyek ini adalah pembuatan mini aplikasi untuk manage article
+Proyek ini adalah pembuatan mini aplikasi untuk manage article,
+Website dapat diakses dengan
+
+```
+backend-supervision-git-main-yuhariermys-projects.vercel.app
+```
 
 ## Features
 

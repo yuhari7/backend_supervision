@@ -73,6 +73,6 @@ func (r *articleRepository) FindWithPagination(limit, offset int, articles *[]en
 
 func (r *articleRepository) SearchArticles(query string, limit, offset int) ([]entity.Article, error) {
 	var articles []entity.Article
-	return articles, config.DB.Where("title ILIKE ? OR content ILIKE ? OR category ILIKE ?", "%"+query+"%", "%"+query+"%", "%"+query+"%").
+	return articles, config.DB.Where("title ILIKE ? OR status ILIKE ? OR content ILIKE ? OR category ILIKE ?", "%"+query+"%", "%"+query+"%", "%"+query+"%", "%"+query+"%").
 		Limit(limit).Offset(offset).Find(&articles).Error
 }
