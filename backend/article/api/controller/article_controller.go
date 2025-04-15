@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"github.com/yuhari7/backend_supervision/article/internal/common/dto"
 	"github.com/yuhari7/backend_supervision/article/internal/usecase"
@@ -11,29 +12,51 @@ import (
 
 type ArticleController struct {
 	ArticleUsecase usecase.ArticleUsecase
+	Validator      *validator.Validate
 }
 
 // NewArticleController creates a new instance of ArticleController
 func NewArticleController(articleUsecase usecase.ArticleUsecase) *ArticleController {
 	return &ArticleController{
 		ArticleUsecase: articleUsecase,
+		Validator:      validator.New(),
 	}
 }
 
 // Create handles the creation of a new article
 func (c *ArticleController) Create(ctx echo.Context) error {
-	var dto dto.CreateArticleRequest
-	if err := ctx.Bind(&dto); err != nil {
+	var request dto.CreateArticleRequest
+
+	// Bind the incoming request body to the DTO
+	if err := ctx.Bind(&request); err != nil {
 		return ctx.JSON(http.StatusBadRequest, echo.Map{"error": "invalid request"})
 	}
 
-	// Execute the create article usecase
-	response, err := c.ArticleUsecase.CreateArticle(dto)
+	// Validate the request data
+	if err := c.Validator.Struct(&request); err != nil {
+		errorMessages := make(map[string]string)
+		for _, err := range err.(validator.ValidationErrors) {
+			switch err.Field() {
+			case "Title":
+				errorMessages["title"] = "Title Kurang dari 20 Character"
+			case "Content":
+				errorMessages["content"] = "Description Minimal 200 Character"
+			case "Category":
+				errorMessages["category"] = "Category minimal 3 Character"
+			default:
+				errorMessages[err.Field()] = err.Error()
+			}
+		}
+		return ctx.JSON(http.StatusBadRequest, echo.Map{"error": errorMessages})
+	}
+
+	// Call the usecase to create the article
+	article, err := c.ArticleUsecase.CreateArticle(request)
 	if err != nil {
 		return ctx.JSON(http.StatusInternalServerError, echo.Map{"error": err.Error()})
 	}
 
-	return ctx.JSON(http.StatusCreated, response)
+	return ctx.JSON(http.StatusCreated, article)
 }
 
 // GetAll handles retrieving all articles
@@ -45,12 +68,12 @@ func (c *ArticleController) GetAll(ctx echo.Context) error {
 	// Convert limit and offset to integers
 	limit, err := strconv.Atoi(limitStr)
 	if err != nil {
-		limit = 10 // Set default limit to 10 if no value is provided or invalid
+		limit = 10
 	}
 
 	offset, err := strconv.Atoi(offsetStr)
 	if err != nil {
-		offset = 0 // Set default offset to 0 if no value is provided or invalid
+		offset = 0
 	}
 
 	// Execute the find all articles usecase with pagination
@@ -84,32 +107,41 @@ func (c *ArticleController) FindByID(ctx echo.Context) error {
 }
 
 func (c *ArticleController) Update(ctx echo.Context) error {
-	var dto dto.UpdateArticleRequest
-	if err := ctx.Bind(&dto); err != nil {
+	var request dto.UpdateArticleRequest
+
+	if err := ctx.Bind(&request); err != nil {
 		return ctx.JSON(http.StatusBadRequest, echo.Map{"error": "invalid request"})
 	}
 
-	// Get the article ID from the URL parameter (as a string)
-	idStr := ctx.Param("id")
+	// Validate the request data
+	if err := c.Validator.Struct(&request); err != nil {
+		errorMessages := make(map[string]string)
 
-	// Convert the string ID to uint
-	id, err := strconv.ParseUint(idStr, 10, 32)
-	if err != nil {
-		return ctx.JSON(http.StatusBadRequest, echo.Map{"error": "invalid article ID"})
+		for _, err := range err.(validator.ValidationErrors) {
+			switch err.Field() {
+			case "Title":
+				errorMessages["title"] = "Title Kurang dari 20 Character"
+			case "Content":
+				errorMessages["content"] = "Description Minimal 200 Character"
+			case "Category":
+				errorMessages["category"] = "Category minimal 3 Character"
+			default:
+				errorMessages[err.Field()] = err.Error()
+			}
+		}
+
+		// Return validation errors
+		return ctx.JSON(http.StatusBadRequest, echo.Map{"error": errorMessages})
 	}
 
-	// Set the ID for the update request
-	dto.ID = uint(id)
-
 	// Execute the update article usecase
-	article, err := c.ArticleUsecase.UpdateArticle(dto)
+	article, err := c.ArticleUsecase.UpdateArticle(request)
 	if err != nil {
-		return ctx.JSON(http.StatusNotFound, echo.Map{"error": err.Error()})
+		return ctx.JSON(http.StatusInternalServerError, echo.Map{"error": err.Error()})
 	}
 
 	return ctx.JSON(http.StatusOK, article) // Return the updated article
 }
-
 func (c *ArticleController) SoftDelete(ctx echo.Context) error {
 	// Get the article ID from the URL parameter
 	idStr := ctx.Param("id")
@@ -157,4 +189,35 @@ func (c *ArticleController) Delete(ctx echo.Context) error {
 	}
 
 	return ctx.JSON(http.StatusOK, echo.Map{"message": "Article deleted permanently"})
+}
+
+func (c *ArticleController) Search(ctx echo.Context) error {
+	query := ctx.QueryParam("q")
+	limitStr := ctx.QueryParam("limit")
+	offsetStr := ctx.QueryParam("offset")
+
+	limit := 10
+	offset := 0
+
+	if limitStr != "" {
+		if parsedLimit, err := strconv.Atoi(limitStr); err == nil {
+			limit = parsedLimit
+		}
+	}
+	if offsetStr != "" {
+		if parsedOffset, err := strconv.Atoi(offsetStr); err == nil {
+			offset = parsedOffset
+		}
+	}
+
+	if query == "" {
+		return ctx.JSON(http.StatusBadRequest, map[string]string{"error": "Query parameter 'q' is required"})
+	}
+
+	articles, err := c.ArticleUsecase.SearchArticles(query, limit, offset)
+	if err != nil {
+		return ctx.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	return ctx.JSON(http.StatusOK, articles)
 }

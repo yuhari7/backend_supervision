@@ -16,7 +16,8 @@ type ArticleRepository interface {
 	Update(article *entity.Article) error
 	Delete(id uint) error
 	SoftDelete(id uint) error
-	FindWithPagination(limit, offset int, articles *[]entity.Article) error // Add pagination method
+	FindWithPagination(limit, offset int, articles *[]entity.Article) error
+	SearchArticles(query string, limit, offset int) ([]entity.Article, error)
 }
 
 type articleRepository struct{}
@@ -68,4 +69,10 @@ func (r *articleRepository) SoftDelete(id uint) error {
 
 func (r *articleRepository) FindWithPagination(limit, offset int, articles *[]entity.Article) error {
 	return config.DB.Limit(limit).Offset(offset).Find(articles).Error
+}
+
+func (r *articleRepository) SearchArticles(query string, limit, offset int) ([]entity.Article, error) {
+	var articles []entity.Article
+	return articles, config.DB.Where("title ILIKE ? OR content ILIKE ? OR category ILIKE ?", "%"+query+"%", "%"+query+"%", "%"+query+"%").
+		Limit(limit).Offset(offset).Find(&articles).Error
 }

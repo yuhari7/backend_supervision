@@ -16,6 +16,7 @@ type ArticleUsecase interface {
 	DeleteArticle(dto dto.SoftDeleteArticleDTO) error
 	FindByID(id uint) (dto.ArticleResponse, error)
 	FindAllArticles(limit, offset int) ([]dto.ArticleResponse, error)
+	SearchArticles(query string, limit, offset int) ([]dto.ArticleResponse, error)
 }
 
 type articleUsecase struct {
@@ -153,4 +154,26 @@ func (u *articleUsecase) DeleteArticle(dto dto.SoftDeleteArticleDTO) error {
 	}
 
 	return nil
+}
+
+func (u *articleUsecase) SearchArticles(query string, limit, offset int) ([]dto.ArticleResponse, error) {
+	articles, err := u.repo.SearchArticles(query, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+
+	var response []dto.ArticleResponse
+	for _, article := range articles {
+		response = append(response, dto.ArticleResponse{
+			ID:        article.ID,
+			Title:     article.Title,
+			Content:   article.Content,
+			Category:  article.Category,
+			Status:    article.Status,
+			CreatedAt: article.CreatedDate.Format("2006-01-02 15:04:05"),
+			UpdatedAt: article.UpdatedDate.Format("2006-01-02 15:04:05"),
+		})
+	}
+
+	return response, nil
 }
