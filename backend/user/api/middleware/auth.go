@@ -1,6 +1,8 @@
 package middleware
 
 import (
+	"fmt"
+	"log"
 	"net/http"
 	"strings"
 
@@ -21,9 +23,13 @@ func AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 
 		tokenStr := parts[1]
+		fmt.Println("Received Token:", tokenStr)
 
 		claims, err := jwt.ParseAccessToken(tokenStr)
+		fmt.Println("Token Claims:", claims)
+
 		if err != nil {
+			log.Println("Error Parsing Token:", err) // Debug log
 			return c.JSON(http.StatusUnauthorized, echo.Map{"error": "invalid or expired token"})
 		}
 

@@ -6,14 +6,19 @@ import (
 
 // RegisterArticleRoutes sets up the routes for article-related endpoints
 func RegisterArticleRoutes(e *echo.Group, controller *ArticleController) {
-	e.GET("/articles", controller.GetAll)
-	e.GET("/articles/search", controller.Search)
-	e.GET("/articles/:id", controller.FindByID)
+	// e.GET("/articles", controller.GetAll)
 
-	e.POST("/articles", controller.Create)
+	articleGroup := e.Group("/articles")
 
-	e.PUT("/articles/:id", controller.Update)
-	e.PUT("/articles/:id/trash", controller.SoftDelete)
+	articleGroup.GET("", controller.GetAll)
 
-	e.DELETE("/articles/:id", controller.Delete)
+	articleGroup.GET("/search", controller.Search)
+	articleGroup.GET("/:id", controller.FindByID)
+
+	articleGroup.POST("", controller.Create)
+
+	articleGroup.PUT("/:id", controller.Update)
+	articleGroup.PUT("/:id/trash", controller.SoftDelete)
+
+	articleGroup.DELETE("/:id", controller.Delete)
 }
